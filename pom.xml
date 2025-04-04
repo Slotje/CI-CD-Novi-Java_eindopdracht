@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+<!--        We gebruiken Spring Boot versie 3.0.2-->
+        <version>3.0.2</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>nl.novi</groupId>
+    <artifactId>TechItEasy-11-21</artifactId>
+<!--    SNAPSHOT betekent "work in progress". Dit hoor je bij het inleveren van je eindopdracht aangepast te hebben-->
+    <version>0.0.1-SNAPSHOT</version>
+    <name>TechItEasy-11-21</name>
+    <description>TechItEasy-11-21</description>
+    <properties>
+        <!--        We gebruiken hier versie 17, maar versie 11 is ook goed. Zolang het maar een LTS versie is-->
+        <java.version>17</java.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+<!--            Dit is de eerste dependency die we nodig hebben. Met deze dependency kunnen we RestControllers maken-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+<!--        Deze dependency is voor de test die al standaard in de test folder staat. Hier gaan we later nog meer mee doen-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+<!--    Deze plugin werkt niet altijd voor iedereen. Als deze plugin niet herkent wordt op jou pc, dan mag je dat gewoon negeren-->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
