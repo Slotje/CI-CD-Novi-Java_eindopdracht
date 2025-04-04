@@ -1,20 +1,16 @@
-name: Java CI/CD with Maven & Docker
+name: Build workflow Java CI/CD with Maven & Docker
 
 on:
   push:
-    branches: [ "main", "develop" ]
-  pull_request:
-    branches: [ "main" ]
-  workflow_dispatch:
+    branches:
+      - main
 
 jobs:
   build:
-    name: Build and Test
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -69,12 +65,10 @@ jobs:
             type=sha,format=short
             latest
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Build Docker image
+        run: |
+          docker build -t $IMAGE_NAME_LOWER:latest .
+
+      - name: Push Docker image
+        run: |
+          docker push $IMAGE_NAME_LOWER:latest
