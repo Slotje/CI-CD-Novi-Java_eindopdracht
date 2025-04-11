@@ -36,6 +36,8 @@ jobs:
     name: Build and Push Docker Image
     needs: build
     runs-on: ubuntu-latest
+    outputs:
+      image_name: ${{ steps.set_image.outputs.image_name }}
     permissions:
       contents: read
       packages: write
@@ -54,16 +56,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Docker image
+      - name: Set image name
+        id: set_image
         run: |
           IMAGE_NAME_LOWER=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          docker build -t $IMAGE_NAME_LOWER:latest .
+          echo "image_name=${IMAGE_NAME_LOWER}:latest" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ steps.set_image.outputs.image_name }} .
 
       - name: Push Docker image
         run: |
-          IMAGE_NAME_LOWER=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          docker push $IMAGE_NAME_LOWER:latest
-          echo "IMAGE_NAME=$IMAGE_NAME_LOWER:latest" >> $GITHUB_ENV
+          docker push ${{ steps.set_image.outputs.image_name }}
 
   deploy:
     name: Deploy to DigitalOcean Kubernetes
@@ -106,7 +111,7 @@ jobs:
               spec:
                 containers:
                 - name: techiteasy
-                  image: ${{ env.IMAGE_NAME }}
+                  image: ${{ needs.docker.outputs.image_name }}
                   ports:
                   - containerPort: 8080
                   resources:
@@ -132,6 +137,13 @@ jobs:
               targetPort: 8080
             type: LoadBalancer
           EOF
+
+      - name: Debug - Show YAML files
+        run: |
+          echo "=== DEPLOYMENT YAML ==="
+          cat k8s/deployment.yaml
+          echo "=== SERVICE YAML ==="
+          cat k8s/service.yaml
 
       - name: Deploy to Kubernetes
         run: |
