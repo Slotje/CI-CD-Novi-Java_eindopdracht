@@ -4,7 +4,7 @@ COPY pom.xml .
 COPY src src
 RUN mvn clean package -DskipTests
 
-# test
+# test 1
 FROM openjdk:17
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
