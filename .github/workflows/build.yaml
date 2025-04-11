@@ -1,4 +1,4 @@
-name: Build and Deploy to Kubernetes
+name: Build and Deploy to DigitalOcean Kubernetes
 
 on:
   push:
@@ -54,18 +54,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=ref,event=branch
-            type=sha,format=short
-            latest
-
       - name: Build Docker image
         run: |
           IMAGE_NAME_LOWER=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
@@ -75,21 +63,24 @@ jobs:
         run: |
           IMAGE_NAME_LOWER=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           docker push $IMAGE_NAME_LOWER:latest
-
-      # Sla deze image naam op voor gebruik in de deploy job
-      - name: Save image name
-        run: |
-          IMAGE_NAME_LOWER=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           echo "IMAGE_NAME=$IMAGE_NAME_LOWER:latest" >> $GITHUB_ENV
 
   deploy:
-    name: Deploy to Kubernetes
+    name: Deploy to DigitalOcean Kubernetes
     needs: docker
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Save DigitalOcean kubeconfig
+        run: doctl kubernetes cluster kubeconfig save ${{ secrets.CLUSTER_NAME }}
 
       - name: Create k8s YAML
         run: |
@@ -139,14 +130,8 @@ jobs:
             ports:
             - port: 80
               targetPort: 8080
-            type: ClusterIP
+            type: LoadBalancer
           EOF
-
-      - name: Set up kubeconfig
-        uses: azure/k8s-set-context@v1
-        with:
-          method: kubeconfig
-          kubeconfig: ${{ secrets.KUBE_CONFIG }}
 
       - name: Deploy to Kubernetes
         run: |
