@@ -11,7 +11,7 @@ public class TelevisionController {
     public ResponseEntity<String> getAllTelevisions() {
 
         // Return een String met een 200 status
-        return ResponseEntity.ok("televisions");
+        return ResponseEntity.ok("test");
 
     }
 
