@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: techiteasy
+  namespace: ci-cd-eindopdracht
+spec:
+  selector:
+    app: techiteasy
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: LoadBalancer

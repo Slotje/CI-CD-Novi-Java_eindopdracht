@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: techiteasy
+  namespace: ci-cd-eindopdracht
+  labels:
+    app: techiteasy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: techiteasy
+  template:
+    metadata:
+      labels:
+        app: techiteasy
+    spec:
+      containers:
+      - name: techiteasy
+        image: ghcr.io/JOUW-GEBRUIKERSNAAM/JOUW-REPOSITORY:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: "0.5"
+            memory: "512Mi"
+          requests:
+            cpu: "0.2"
+            memory: "256Mi"
