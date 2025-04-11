@@ -1,4 +1,4 @@
-name: Build workflow Java CI/CD with Maven & Docker
+name: Build and Deploy to Kubernetes
 
 on:
   push:
@@ -31,8 +31,6 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-
-  # Rest van de workflow blijft hetzelfde
 
   docker:
     name: Build and Push Docker Image
@@ -77,3 +75,81 @@ jobs:
         run: |
           IMAGE_NAME_LOWER=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           docker push $IMAGE_NAME_LOWER:latest
+
+      # Sla deze image naam op voor gebruik in de deploy job
+      - name: Save image name
+        run: |
+          IMAGE_NAME_LOWER=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME=$IMAGE_NAME_LOWER:latest" >> $GITHUB_ENV
+
+  deploy:
+    name: Deploy to Kubernetes
+    needs: docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create k8s YAML
+        run: |
+          mkdir -p k8s
+          
+          # Deployment YAML
+          cat > k8s/deployment.yaml << EOF
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: techiteasy
+            labels:
+              app: techiteasy
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: techiteasy
+            template:
+              metadata:
+                labels:
+                  app: techiteasy
+              spec:
+                containers:
+                - name: techiteasy
+                  image: ${{ env.IMAGE_NAME }}
+                  ports:
+                  - containerPort: 8080
+                  resources:
+                    limits:
+                      cpu: "0.5"
+                      memory: "512Mi"
+                    requests:
+                      cpu: "0.2"
+                      memory: "256Mi"
+          EOF
+          
+          # Service YAML
+          cat > k8s/service.yaml << EOF
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: techiteasy
+          spec:
+            selector:
+              app: techiteasy
+            ports:
+            - port: 80
+              targetPort: 8080
+            type: ClusterIP
+          EOF
+
+      - name: Set up kubeconfig
+        uses: azure/k8s-set-context@v1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+          kubectl rollout restart deployment/techiteasy
