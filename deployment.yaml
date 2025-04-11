@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: techiteasy
-        image: ghcr.io/JOUW-GEBRUIKERSNAAM/JOUW-REPOSITORY:latest
+        image: ghcr.io/slotje/ci-cd-novi-java_eindopdracht:latest
         ports:
         - containerPort: 8080
         resources:
