@@ -87,6 +87,9 @@ jobs:
       - name: Save DigitalOcean kubeconfig
         run: doctl kubernetes cluster kubeconfig save ${{ secrets.CLUSTER_NAME }}
 
+      - name: Create namespace if not exists
+        run: kubectl create namespace ci-cd-eindopdracht --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Create k8s YAML
         run: |
           mkdir -p k8s
@@ -97,6 +100,7 @@ jobs:
           kind: Deployment
           metadata:
             name: techiteasy
+            namespace: ci-cd-eindopdracht
             labels:
               app: techiteasy
           spec:
@@ -129,6 +133,7 @@ jobs:
           kind: Service
           metadata:
             name: techiteasy
+            namespace: ci-cd-eindopdracht
           spec:
             selector:
               app: techiteasy
@@ -149,4 +154,4 @@ jobs:
         run: |
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
-          kubectl rollout restart deployment/techiteasy
+          kubectl rollout restart deployment/techiteasy -n ci-cd-eindopdracht
